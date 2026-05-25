@@ -1,0 +1,44 @@
+PASOS PARA ARRANCAR LA PAGINA
+
+1. Abrir una terminal para el backend:
+
+cd "c:\Users\Grupo B\Desktop\prueba\prueba de inicio\carpeta_pagina_web_prueba\backend"
+npm start
+
+2. Abrir otra terminal para el frontend:
+
+cd "c:\Users\Grupo B\Desktop\prueba\prueba de inicio\carpeta_pagina_web_prueba\frontend\mi-app"
+npm run dev
+
+3. Abrir la pagina en el navegador:
+
+http://localhost:3000/users/login
+
+Para abrir desde un telefono Android en la misma red WiFi:
+
+http://192.168.204.67:3000/users/login
+
+IMPORTANTE PARA ANDROID:
+
+No uses localhost en el telefono. En Android, localhost apunta al telefono, no a la computadora.
+El frontend usa automaticamente la misma IP del navegador y llama al backend en el puerto 3001.
+
+4. Entrar como administrador:
+
+Correo: brandonmegia612@gmail.com
+Contrasena: 336796uy
+
+5. Resultado esperado:
+
+Si el correo y la contrasena son correctos, la pagina abre el panel de administrador:
+
+http://localhost:3000/admin
+
+Los usuarios normales entran a:
+
+http://localhost:3000/users/profile
+
+IMPORTANTE:
+
+El backend debe estar corriendo en http://localhost:3001 para que el login funcione.
+El frontend debe estar corriendo en http://localhost:3000 para ver la pagina.
