@@ -7,9 +7,8 @@ import reportWebVitals from './reportWebVitals';
 
 const currentHost = window.location.hostname;
 const isLocalHost = currentHost === 'localhost' || currentHost === '127.0.0.1';
-const apiUrl = isLocalHost
-  ? process.env.REACT_APP_API_URL || 'http://localhost:3001'
-  : `${window.location.protocol}//${currentHost}:3001`;
+const apiUrl = process.env.REACT_APP_API_URL
+  || (isLocalHost ? 'http://localhost:3001' : `${window.location.protocol}//${currentHost}`);
 
 axios.defaults.baseURL = apiUrl;
 
