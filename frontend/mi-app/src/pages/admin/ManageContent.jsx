@@ -95,7 +95,7 @@ const ManageContent = () => {
     setForm(current => ({
       ...current,
       [name]: nextValue,
-      category: name === 'type' && value === 'series' ? 'series' : current.category,
+      ...(name === 'type' && value === 'series' ? { category: 'series' } : {}),
     }));
   };
 
