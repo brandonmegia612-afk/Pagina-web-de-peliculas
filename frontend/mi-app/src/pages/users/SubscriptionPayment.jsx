@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, CreditCard, LockKeyhole } from 'lucide-react';
+import { ArrowLeft, CheckCircle, CreditCard, LockKeyhole, Wallet } from 'lucide-react';
 
 const authHeaders = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -23,10 +23,13 @@ const formatExpiry = value => {
 const SubscriptionPayment = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
+    paymentMethod: 'card',
+    cardNetwork: 'visa',
     cardName: '',
     cardNumber: '',
     expiry: '',
     cvv: '',
+    paypalEmail: '',
   });
   const [receivingCard, setReceivingCard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -83,6 +86,8 @@ const SubscriptionPayment = () => {
           cardNumber: cleanCardNumber,
           expiry: form.expiry,
           cvv: form.cvv,
+          paymentMethod: form.paymentMethod,
+          paypalEmail: form.paypalEmail,
         },
         authHeaders()
       );
@@ -117,12 +122,52 @@ const SubscriptionPayment = () => {
 
           {error && <div className="rounded-lg border border-red-700/50 bg-red-950/70 p-4 text-red-200">{error}</div>}
           {message && <div className="rounded-lg border border-green-700/50 bg-green-950/70 p-4 text-green-200">{message}</div>}
-          {!loading && !receivingCard && (
+          {!loading && form.paymentMethod === 'card' && !receivingCard && (
             <div className="rounded-lg border border-amber-600/50 bg-amber-950/50 p-4 text-amber-100">
               El administrador debe agregar una tarjeta de cobro activa antes de recibir pagos.
             </div>
           )}
 
+          <div>
+            <label className="block text-sm font-semibold uppercase tracking-[0.15em] text-purple-200">Forma de pago</label>
+            <div className="mt-2 grid gap-3 sm:grid-cols-3">
+              {[
+                { value: 'card', network: 'visa', label: 'Visa', helper: 'Tarjeta' },
+                { value: 'card', network: 'mastercard', label: 'Mastercard', helper: 'Tarjeta' },
+                { value: 'paypal', network: 'paypal', label: 'PayPal', helper: 'Correo' },
+              ].map(option => {
+                const active = form.paymentMethod === option.value && form.cardNetwork === option.network;
+                return (
+                  <button
+                    key={`${option.value}-${option.label}`}
+                    type="button"
+                    onClick={() => setForm(current => ({ ...current, paymentMethod: option.value, cardNetwork: option.network }))}
+                    className={`rounded-lg border px-4 py-3 text-left transition ${active ? 'border-purple-400 bg-purple-600/20 text-white' : 'border-zinc-700 bg-zinc-900 text-gray-300 hover:border-purple-500'}`}
+                  >
+                    <span className="block font-bold">{option.label}</span>
+                    <span className="text-sm text-gray-400">{option.helper}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {form.paymentMethod === 'paypal' ? (
+            <div>
+              <label className="block text-sm font-semibold uppercase tracking-[0.15em] text-purple-200">Correo PayPal</label>
+              <input
+                name="paypalEmail"
+                type="email"
+                value={form.paypalEmail}
+                onChange={updateField}
+                autoComplete="email"
+                placeholder="cuenta@paypal.com"
+                className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 text-white outline-none focus:border-purple-400"
+                required
+              />
+            </div>
+          ) : (
+            <>
           <div>
             <label className="block text-sm font-semibold uppercase tracking-[0.15em] text-purple-200">Nombre en la tarjeta</label>
             <input
@@ -183,10 +228,12 @@ const SubscriptionPayment = () => {
               />
             </div>
           </div>
+            </>
+          )}
 
           <button
             type="submit"
-            disabled={processing || loading || !receivingCard}
+            disabled={processing || loading || (form.paymentMethod === 'card' && !receivingCard)}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-6 py-3 font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <LockKeyhole className="h-5 w-5" />
@@ -196,7 +243,7 @@ const SubscriptionPayment = () => {
 
         <aside className="space-y-4 rounded-lg border border-zinc-800 bg-black/80 p-6">
           <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-600/20 text-purple-200">
-            <CreditCard className="h-6 w-6" />
+            {form.paymentMethod === 'paypal' ? <Wallet className="h-6 w-6" /> : <CreditCard className="h-6 w-6" />}
           </div>
           <div>
             <p className="text-gray-400">Plan seleccionado</p>
@@ -220,11 +267,10 @@ const SubscriptionPayment = () => {
               Acceso inmediato despues del pago
             </li>
           </ul>
-          {receivingCard && (
-            <p className="rounded-lg border border-green-700/40 bg-green-950/40 p-3 text-sm text-green-200">
-              Cobro activo: {receivingCard.cardBrand} **** {receivingCard.cardLast4}
-            </p>
-          )}
+          <p className="rounded-lg border border-green-700/40 bg-green-950/40 p-3 text-sm text-green-200">
+            Formas disponibles: PayPal, Visa y Mastercard.
+            {receivingCard ? ` Cobro activo: ${receivingCard.cardBrand} **** ${receivingCard.cardLast4}` : ''}
+          </p>
         </aside>
       </section>
     </div>

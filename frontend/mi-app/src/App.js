@@ -21,8 +21,10 @@ import Profile from './pages/users/Profile';
 import Search from './pages/users/Search';
 import Subscription from './pages/users/Subscription';
 import SubscriptionPayment from './pages/users/SubscriptionPayment';
+import ForgotPassword from './pages/users/auth/ForgotPassword';
 import Login from './pages/users/auth/Login';
 import Register from './pages/users/auth/Register';
+import ResetPassword from './pages/users/auth/ResetPassword';
 import Termino from './pages/users/Termino';
 import './App.css';
 
@@ -89,6 +91,8 @@ function App() {
               <Route path="subscription/payment" element={<SubscriptionPayment />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
+              <Route path="forgot-password" element={<ForgotPassword />} />
+              <Route path="reset-password" element={<ResetPassword />} />
               <Route path="terminos" element={<Termino />} />
             </Routes>
           </LayoutUser>

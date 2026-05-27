@@ -59,6 +59,14 @@ const User = sequelize.define('User', {
       isIn: [['free', 'premium']],
     },
   },
+  resetPasswordToken: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  resetPasswordExpires: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 });
 
 const Email = sequelize.define('Email', {
@@ -154,11 +162,20 @@ const Subscription = sequelize.define('Subscription', {
   },
   cardBrand: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   cardLast4: {
     type: DataTypes.STRING,
+    allowNull: true,
+  },
+  paymentMethod: {
+    type: DataTypes.STRING,
     allowNull: false,
+    defaultValue: 'card',
+  },
+  payerEmail: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   trialEndsAt: {
     type: DataTypes.DATE,
@@ -713,6 +730,65 @@ app.post('/api/login', async (req, res) => {
   });
 });
 
+app.post('/api/forgot-password', async (req, res) => {
+  const normalizedEmail = normalizeEmail(req.body.email);
+
+  if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
+    return res.status(400).json({ message: 'Ingresa un correo electronico valido.' });
+  }
+
+  const user = await User.findOne({ where: { email: normalizedEmail } });
+  if (!user) {
+    return res.json({ message: 'Si el correo existe, se genero un enlace de restauracion.' });
+  }
+
+  const resetToken = crypto.randomBytes(24).toString('hex');
+  await user.update({
+    resetPasswordToken: resetToken,
+    resetPasswordExpires: new Date(Date.now() + 60 * 60 * 1000),
+  });
+
+  await Email.create({
+    subject: 'Restauracion de contrasena',
+    sender: user.email,
+  });
+
+  return res.json({
+    message: 'Se genero un enlace de restauracion.',
+    resetToken,
+  });
+});
+
+app.post('/api/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+
+  if (!token || !password) {
+    return res.status(400).json({ message: 'Token y nueva contrasena son obligatorios.' });
+  }
+
+  if (String(password).length < 8) {
+    return res.status(400).json({ message: 'La contrasena debe tener al menos 8 caracteres.' });
+  }
+
+  const user = await User.findOne({ where: { resetPasswordToken: token } });
+  if (!user || !user.resetPasswordExpires || new Date(user.resetPasswordExpires) < new Date()) {
+    return res.status(400).json({ message: 'El enlace de restauracion no es valido o ya expiro.' });
+  }
+
+  await user.update({
+    password: bcrypt.hashSync(password, 10),
+    resetPasswordToken: null,
+    resetPasswordExpires: null,
+  });
+
+  await Email.create({
+    subject: 'Contrasena restaurada',
+    sender: user.email,
+  });
+
+  return res.json({ message: 'Contrasena actualizada. Ya puedes iniciar sesion.' });
+});
+
 app.post('/api/logout', authRequired, async (req, res) => {
   const token = getTokenFromRequest(req);
   await AccessLog.create({
@@ -738,20 +814,29 @@ app.get('/api/subscription', authRequired, async (req, res) => {
 });
 
 app.post('/api/subscription', authRequired, async (req, res) => {
-  const { cardNumber, cardName, expiry, cvv } = req.body;
+  const { paymentMethod = 'card', cardNumber, cardName, expiry, cvv, paypalEmail } = req.body;
   const cleanCardNumber = String(cardNumber || '').replace(/\D/g, '');
   const brand = detectCardBrand(cleanCardNumber);
+  const normalizedPaypalEmail = normalizeEmail(paypalEmail);
 
   if (!isAdult(req.user.dateOfBirth)) {
     return res.status(403).json({ message: 'Debes ser mayor de 18 anos para activar este plan.' });
   }
 
-  if (!cardName || !brand || !passesLuhn(cleanCardNumber) || !isFutureExpiry(expiry) || !/^\d{3,4}$/.test(String(cvv || ''))) {
+  if (!['card', 'paypal'].includes(paymentMethod)) {
+    return res.status(400).json({ message: 'Selecciona Visa, Mastercard o PayPal.' });
+  }
+
+  if (paymentMethod === 'card' && (!cardName || !brand || !passesLuhn(cleanCardNumber) || !isFutureExpiry(expiry) || !/^\d{3,4}$/.test(String(cvv || '')))) {
     return res.status(400).json({ message: 'Tarjeta invalida. Usa Visa o Mastercard vigente.' });
   }
 
+  if (paymentMethod === 'paypal' && !isValidEmail(normalizedPaypalEmail)) {
+    return res.status(400).json({ message: 'Ingresa un correo PayPal valido.' });
+  }
+
   const receivingCard = await ReceivingCard.findOne({ where: { active: true } });
-  if (!receivingCard) {
+  if (paymentMethod === 'card' && !receivingCard) {
     return res.status(400).json({ message: 'El administrador debe agregar una tarjeta de cobro activa.' });
   }
 
@@ -763,13 +848,15 @@ app.post('/api/subscription', authRequired, async (req, res) => {
     status: 'paid_ahead',
     amountCents: 25,
     currency: 'USD',
-    cardBrand: brand,
-    cardLast4: cleanCardNumber.slice(-4),
+    paymentMethod,
+    payerEmail: paymentMethod === 'paypal' ? normalizedPaypalEmail : null,
+    cardBrand: paymentMethod === 'paypal' ? 'PayPal' : brand,
+    cardLast4: paymentMethod === 'paypal' ? null : cleanCardNumber.slice(-4),
     trialEndsAt,
     paidThrough,
     adultContentEnabled: true,
-    receivingCardName: receivingCard.name,
-    receivingCardLast4: receivingCard.cardLast4,
+    receivingCardName: receivingCard?.name || null,
+    receivingCardLast4: receivingCard?.cardLast4 || null,
     UserId: req.user.id,
   };
 

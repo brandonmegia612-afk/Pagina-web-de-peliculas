@@ -61,6 +61,12 @@ const Login = () => {
 
         {error && <div className="rounded-3xl bg-red-900/80 p-4 text-sm text-red-200">{error}</div>}
 
+        <div className="text-right">
+          <Link to="/users/forgot-password" className="text-sm text-red-300 hover:text-white">
+            Olvidaste tu contrasena?
+          </Link>
+        </div>
+
         <button type="submit" className="w-full rounded-full bg-red-700 px-6 py-3 text-lg font-semibold uppercase tracking-[0.15em] text-white hover:bg-red-600">
           Entrar
         </button>
