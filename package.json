@@ -1,0 +1,10 @@
+{
+  "name": "carpeta_pagina_web_prueba",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix frontend/mi-app run build",
+    "start": "npm --prefix backend start",
+    "railway:build": "npm --prefix backend ci"
+  }
+}

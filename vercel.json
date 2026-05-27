@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "installCommand": "cd frontend/mi-app && npm ci",
+  "buildCommand": "cd frontend/mi-app && npm run build",
+  "outputDirectory": "frontend/mi-app/build",
+  "rewrites": [
+    {
+      "source": "/((?!api/.*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

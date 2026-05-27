@@ -8,6 +8,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 const databaseUrl = process.env.DATABASE_URL || 'sqlite:./database.sqlite';
 const sequelize = new Sequelize(databaseUrl, {
   dialect: databaseUrl.startsWith('sqlite:') ? 'sqlite' : 'postgres',
