@@ -15,6 +15,7 @@ const emptyForm = {
   featured: true,
   body: '',
   durationMinutes: 60,
+  premiumOnly: false,
 };
 
 const categories = [
@@ -137,6 +138,11 @@ const ManageContent = () => {
                 <span className="text-sm font-semibold uppercase tracking-[0.15em] text-cyan-100">Destacado</span>
               </label>
             </div>
+
+            <label className="flex items-center gap-3 rounded-2xl border border-purple-500/30 bg-slate-900 p-3">
+              <input type="checkbox" name="premiumOnly" checked={form.premiumOnly} onChange={updateField} className="h-5 w-5 accent-purple-500" />
+              <span className="text-sm font-semibold uppercase tracking-[0.15em] text-purple-100">Solo Premium</span>
+            </label>
           </div>
         ) : (
           <label className="space-y-2">

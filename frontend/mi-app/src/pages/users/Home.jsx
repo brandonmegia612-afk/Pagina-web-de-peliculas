@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Film } from 'lucide-react';
 
 const Home = () => {
   const [searchText, setSearchText] = useState('');
@@ -67,6 +68,13 @@ const Home = () => {
               className="rounded-3xl border border-red-700/60 bg-red-900/60 px-6 py-5 text-left text-xl font-semibold text-white shadow-xl shadow-red-900/20 transition hover:bg-red-800"
             >
               Buscar por seguridad
+            </button>
+            <button
+              onClick={() => navigate('/users/movies')}
+              className="rounded-3xl border border-red-700/60 bg-red-700/80 px-6 py-5 flex items-center gap-3 text-xl font-semibold text-white shadow-xl shadow-red-900/20 transition hover:bg-red-600 sm:col-span-2 lg:col-span-1"
+            >
+              <Film className="w-6 h-6" />
+              Ir a Películas
             </button>
           </div>
         </div>

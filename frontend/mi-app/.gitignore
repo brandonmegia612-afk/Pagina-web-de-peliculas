@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
@@ -23,3 +24,33 @@ yarn-debug.log*
 yarn-error.log*
 
 .vercel
+=======
+﻿# Node modules
+backend/node_modules/
+frontend/mi-app/node_modules/
+
+# Build output
+frontend/mi-app/build/
+
+# Local environment files
+*.env
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# SQLite local database
+backend/database.sqlite
+>>>>>>> 8bc6fd86aeff3360bdd99a647aeb3a894b060b1e

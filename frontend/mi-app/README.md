@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -68,3 +69,31 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+=======
+# Proyecto Web con Frontend y Backend
+
+## Estructura
+- frontend/: Aplicación React con páginas para admin y usuarios.
+- backend/: API con Express y Sequelize para PostgreSQL.
+
+## Instalación y Ejecución
+
+1. Instalar Docker y Docker Compose.
+
+2. En la raíz del proyecto, ejecutar:
+   ```
+   docker-compose up --build
+   ```
+
+3. Para el frontend, en otra terminal:
+   ```
+   cd frontend/mi-app
+   npm start
+   ```
+
+## Rutas
+- /admin: Panel de administrador (Dashboard, Gestionar Correos, Gestionar Usuarios)
+- /users: Páginas de usuarios (Inicio, Perfil)
+
+La API está en http://localhost:3001
+>>>>>>> 8bc6fd86aeff3360bdd99a647aeb3a894b060b1e

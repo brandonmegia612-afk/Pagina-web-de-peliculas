@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import { Home, Film, FileText, Bell, User, Search, LogOut, CreditCard } from 'lucide-react';
 import './LayoutUser.css';
 
 const LayoutUser = ({ children }) => {
@@ -37,7 +38,7 @@ const LayoutUser = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-black text-white font-serif">
-      <header>
+      <header className="hidden md:block">
         <nav className="flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-purple-950 via-black to-slate-900 p-6 text-white shadow-black/40 shadow-2xl">
           <div className="flex flex-wrap justify-center gap-4 flex-1">
             <Link to="/users" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Inicio</Link>
@@ -45,11 +46,13 @@ const LayoutUser = ({ children }) => {
             <Link to="/users/movies" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Peliculas</Link>
             <Link to="/users/blog" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Notas</Link>
             <Link to="/users/notifications" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Avisos</Link>
+            <Link to="/users/subscription" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Premium</Link>
             <Link to="/users/acerca" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Acerca</Link>
             <Link to="/users/contact" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Contacto</Link>
             <Link to="/users/search" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Buscar</Link>
             <Link to="/users/login" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Ingresar</Link>
             <Link to="/users/register" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Registrar</Link>
+            <Link to="/users/terminos" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Términos y condiciones </Link>
           </div>
           <div className="flex items-center gap-4 ml-4">
             <div className="welcome-container">
@@ -67,39 +70,62 @@ const LayoutUser = ({ children }) => {
     
       </header>
 
-      <main className="mx-auto w-full max-w-6xl p-6 text-base md:text-lg lg:text-xl leading-relaxed">
+      <main className="mx-auto w-full max-w-6xl p-6 pb-28 md:pb-6 text-base md:text-lg lg:text-xl leading-relaxed">
         {children}
       </main>
 
-      <footer className="bg-gradient-to-r from-slate-950 via-black to-purple-950 p-8 mt-10 border-t border-red-900/40 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-500 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
-        </div>
-        <div className="max-w-6xl mx-auto text-center space-y-6 relative z-10">
-          <h1 className="text-3xl md:text-4xl font-black tracking-wide uppercase text-red-300 animate-fade-in">Secciones rápidas</h1>
-          <p className="text-lg text-gray-300 animate-fade-in-delay">Navega por el sitio con un estilo oscuro y envolvente.</p>
-          <ul className="flex flex-wrap justify-center gap-3 md:gap-5 text-base md:text-lg list-none p-0 m-0">
-            <li className="footer-item" style={{ animationDelay: '0s' }}>
-              <Link to="/users/contact" className="footer-link font-semibold">Contacto</Link>
+      <footer className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-black via-slate-950 to-slate-900 border-t border-red-700/40 shadow-2xl shadow-red-900/30 z-50 md:hidden">
+        <div className="max-w-6xl mx-auto px-4 py-3">
+          <ul className="flex justify-around items-center list-none p-0 m-0 flex-wrap">
+            <li>
+              <Link to="/users" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-300 hover:text-red-400 transition rounded-lg hover:bg-red-900/20">
+                <Home className="w-5 h-5" />
+                <span className="text-xs font-semibold uppercase">Inicio</span>
+              </Link>
             </li>
-            <li className="footer-item" style={{ animationDelay: '0.1s' }}>
-              <Link to="/users/acerca" className="footer-link font-semibold">Acerca</Link>
+            <li>
+              <Link to="/users/movies" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-300 hover:text-red-400 transition rounded-lg hover:bg-red-900/20">
+                <Film className="w-5 h-5" />
+                <span className="text-xs font-semibold uppercase">Películas</span>
+              </Link>
             </li>
-            <li className="footer-item" style={{ animationDelay: '0.2s' }}>
-              <Link to="/users/search" className="footer-link font-semibold">Buscar</Link>
+            <li>
+              <Link to="/users/blog" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-300 hover:text-red-400 transition rounded-lg hover:bg-red-900/20">
+                <FileText className="w-5 h-5" />
+                <span className="text-xs font-semibold uppercase">Notas</span>
+              </Link>
             </li>
-            <li className="footer-item" style={{ animationDelay: '0.3s' }}>
-              <Link to="/users/profile" className="footer-link font-semibold">Perfil</Link>
+            <li>
+              <Link to="/users/notifications" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-300 hover:text-red-400 transition rounded-lg hover:bg-red-900/20">
+                <Bell className="w-5 h-5" />
+                <span className="text-xs font-semibold uppercase">Avisos</span>
+              </Link>
             </li>
-            <li className="footer-item" style={{ animationDelay: '0.4s' }}>
-              <Link to="/users/movies" className="footer-link font-semibold">Películas</Link>
+            <li>
+              <Link to="/users/subscription" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-300 hover:text-red-400 transition rounded-lg hover:bg-red-900/20">
+                <CreditCard className="w-5 h-5" />
+                <span className="text-xs font-semibold uppercase">Premium</span>
+              </Link>
             </li>
-            <li className="footer-item" style={{ animationDelay: '0.5s' }}>
-              <Link to="/users/blog" className="footer-link font-semibold">Notas</Link>
+            <li>
+              <Link to="/users/search" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-300 hover:text-red-400 transition rounded-lg hover:bg-red-900/20">
+                <Search className="w-5 h-5" />
+                <span className="text-xs font-semibold uppercase">Buscar</span>
+              </Link>
+            </li>
+            <li>
+              <Link to="/users/profile" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-300 hover:text-red-400 transition rounded-lg hover:bg-red-900/20">
+                <User className="w-5 h-5" />
+                <span className="text-xs font-semibold uppercase">Perfil</span>
+              </Link>
+            </li>
+            <li>
+              <button onClick={logout} className="flex flex-col items-center gap-1 px-3 py-2 text-gray-300 hover:text-red-400 transition rounded-lg hover:bg-red-900/20">
+                <LogOut className="w-5 h-5" />
+                <span className="text-xs font-semibold uppercase">Salir</span>
+              </button>
             </li>
           </ul>
-          <p className="text-sm md:text-base text-gray-500 animate-fade-in-delay">© 2026 creado en react. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>

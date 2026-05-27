@@ -7,6 +7,8 @@ import AccessLogs from './pages/admin/AccessLogs';
 import ManageContent from './pages/admin/ManageContent';
 import ManageEmails from './pages/admin/ManageEmails';
 import ManageNotifications from './pages/admin/ManageNotifications';
+import ManagePaymentCards from './pages/admin/ManagePaymentCards';
+import ManageSubscriptions from './pages/admin/ManageSubscriptions';
 import ManageUsers from './pages/admin/ManageUsers';
 import Home from './pages/users/Home';
 import Acerca from './pages/users/acerca';
@@ -17,8 +19,10 @@ import MoviePlayer from './pages/users/MoviePlayer';
 import Notifications from './pages/users/Notifications';
 import Profile from './pages/users/Profile';
 import Search from './pages/users/Search';
+import Subscription from './pages/users/Subscription';
 import Login from './pages/users/auth/Login';
 import Register from './pages/users/auth/Register';
+import Termino from './pages/users/Termino';
 import './App.css';
 
 const getStoredUser = () => {
@@ -60,6 +64,8 @@ function App() {
                 <Route path="content" element={<ManageContent />} />
                 <Route path="emails" element={<ManageEmails />} />
                 <Route path="notifications" element={<ManageNotifications />} />
+                <Route path="payment-cards" element={<ManagePaymentCards />} />
+                <Route path="subscriptions" element={<ManageSubscriptions />} />
                 <Route path="users" element={<ManageUsers />} />
               </Routes>
             </LayoutAdmin>
@@ -78,8 +84,10 @@ function App() {
               <Route path="about" element={<Acerca />} />
               <Route path="contact" element={<Contacto />} />
               <Route path="search" element={<Search />} />
+              <Route path="subscription" element={<Subscription />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
+              <Route path="terminos" element={<Termino />} />
             </Routes>
           </LayoutUser>
         } />

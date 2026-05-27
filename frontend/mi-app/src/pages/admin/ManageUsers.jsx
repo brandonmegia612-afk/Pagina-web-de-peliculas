@@ -34,6 +34,23 @@ const ManageUsers = () => {
       .catch(() => setError('No se pudo actualizar el usuario.'));
   };
 
+  const togglePremium = (id, currentTier) => {
+    const newTier = currentTier === 'premium' ? 'free' : 'premium';
+    const action = newTier === 'premium' ? 'Marcar como Premium' : 'Cambiar a Free';
+    if (!window.confirm(`¿${action}?`)) return;
+
+    axios
+      .put(
+        `/api/users/${id}`,
+        { subscriptionTier: newTier },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      )
+      .then(() => {
+        setUsers(users.map(user => (user.id === id ? { ...user, subscriptionTier: newTier } : user)));
+      })
+      .catch(() => setError('No se pudo actualizar el tier del usuario.'));
+  };
+
   const deleteUser = id => {
     if (!window.confirm('Eliminar este usuario?')) {
       return;
@@ -67,6 +84,12 @@ const ManageUsers = () => {
                 <p className="text-gray-400">{user.email}</p>
                 <p className="text-gray-400">Telefono: {user.phone || 'No disponible'}</p>
                 <p className="text-gray-400">Fecha de nacimiento: {user.dateOfBirth || 'No disponible'}</p>
+                <p className="text-gray-400">
+                  Pago premium: {user.Subscription ? `${user.Subscription.cardBrand} **** ${user.Subscription.cardLast4}` : 'Sin pago registrado'}
+                </p>
+                <p className={`text-sm font-semibold uppercase ${user.subscriptionTier === 'premium' ? 'text-purple-300' : 'text-gray-400'}`}>
+                  Tier: {user.subscriptionTier === 'premium' ? '👑 Premium' : 'Free'}
+                </p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <button
@@ -74,6 +97,14 @@ const ManageUsers = () => {
                   className="rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold uppercase tracking-[0.1em] text-white hover:bg-cyan-600"
                 >
                   Editar
+                </button>
+                <button
+                  onClick={() => togglePremium(user.id, user.subscriptionTier)}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-[0.1em] text-white ${
+                    user.subscriptionTier === 'premium' ? 'bg-purple-700 hover:bg-purple-600' : 'bg-amber-700 hover:bg-amber-600'
+                  }`}
+                >
+                  {user.subscriptionTier === 'premium' ? 'Cambiar a Free' : 'Marcar Premium'}
                 </button>
                 <button
                   onClick={() => deleteUser(user.id)}

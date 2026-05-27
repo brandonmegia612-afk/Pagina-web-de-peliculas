@@ -69,18 +69,42 @@ const Profile = () => {
         )}
 
         <div className="mt-10 flex flex-wrap justify-center gap-4">
-          <Link
-            to="/users/login"
-            className="rounded-full bg-red-700 px-8 py-3 text-lg font-semibold uppercase tracking-[0.15em] text-white transition hover:bg-red-600"
-          >
-            Iniciar sesion
-          </Link>
-          <Link
-            to="/users/register"
-            className="rounded-full border border-red-600 bg-transparent px-8 py-3 text-lg font-semibold uppercase tracking-[0.15em] text-red-200 transition hover:border-red-400 hover:text-white"
-          >
-            Registrarse
-          </Link>
+          {user && (
+            <>
+              <Link
+                to="/users/subscription"
+                className="rounded-full bg-purple-700 px-8 py-3 text-lg font-semibold uppercase tracking-[0.15em] text-white transition hover:bg-purple-600"
+              >
+                Mi suscripción
+              </Link>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('user');
+                  localStorage.removeItem('token');
+                  navigate('/users/login');
+                }}
+                className="rounded-full border border-red-600 bg-transparent px-8 py-3 text-lg font-semibold uppercase tracking-[0.15em] text-red-200 transition hover:border-red-400 hover:text-white"
+              >
+                Cerrar sesión
+              </button>
+            </>
+          )}
+          {!user && (
+            <>
+              <Link
+                to="/users/login"
+                className="rounded-full bg-red-700 px-8 py-3 text-lg font-semibold uppercase tracking-[0.15em] text-white transition hover:bg-red-600"
+              >
+                Iniciar sesion
+              </Link>
+              <Link
+                to="/users/register"
+                className="rounded-full border border-red-600 bg-transparent px-8 py-3 text-lg font-semibold uppercase tracking-[0.15em] text-red-200 transition hover:border-red-400 hover:text-white"
+              >
+                Registrarse
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </div>

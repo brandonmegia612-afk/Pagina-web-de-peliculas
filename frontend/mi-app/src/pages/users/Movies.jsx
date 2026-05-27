@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Play, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Star, Crown } from 'lucide-react';
 
 const categoryLabels = {
   destacados: 'Destacados',
@@ -28,6 +28,12 @@ const MovieCard = ({ item }) => (
         <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-400 px-2 py-1 text-xs font-black uppercase text-black">
           <Star size={12} fill="currentColor" />
           Top
+        </div>
+      )}
+      {item.premiumOnly && (
+        <div className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-purple-600 px-2 py-1 text-xs font-black uppercase text-white">
+          <Crown size={12} fill="currentColor" />
+          Premium
         </div>
       )}
       <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -59,6 +65,20 @@ const Movies = () => {
   const [error, setError] = useState('');
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [heroIndex, setHeroIndex] = useState(0);
+  const [userTier, setUserTier] = useState('free');
+  const [showPremiumOnly, setShowPremiumOnly] = useState(false);
+
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        setUserTier(userData.subscriptionTier || 'free');
+      } catch {
+        setUserTier('free');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!token) return;
@@ -82,10 +102,16 @@ const Movies = () => {
   }, [token]);
 
   const featuredItems = useMemo(() => items.filter(item => item.featured), [items]);
-  const heroItems = featuredItems.length ? featuredItems : items;
+  const filteredItems = useMemo(() => {
+    if (showPremiumOnly) {
+      return items.filter(item => item.premiumOnly);
+    }
+    return items;
+  }, [items, showPremiumOnly]);
+  const heroItems = featuredItems.length ? featuredItems : filteredItems;
   const hero = heroItems[heroIndex] || heroItems[0];
   const rows = useMemo(() => {
-    const groups = items.reduce((acc, item) => {
+    const groups = filteredItems.reduce((acc, item) => {
       const category = item.category || 'general';
       if (!acc[category]) acc[category] = [];
       acc[category].push(item);
@@ -101,7 +127,7 @@ const Movies = () => {
       if (category !== 'destacados') ordered.push([category, categoryItems]);
     });
     return ordered;
-  }, [items, featuredItems]);
+  }, [filteredItems, featuredItems]);
 
   useEffect(() => {
     setHeroIndex(0);
@@ -141,6 +167,41 @@ const Movies = () => {
 
   return (
     <div className="space-y-10">
+      <div className="flex gap-3 border-b border-red-700/30 pb-4">
+        <button
+          onClick={() => setShowPremiumOnly(false)}
+          className={`px-6 py-2 font-semibold uppercase tracking-[0.1em] transition rounded-lg ${
+            !showPremiumOnly
+              ? 'bg-red-700 text-white'
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          Todos
+        </button>
+        {userTier === 'premium' && (
+          <button
+            onClick={() => setShowPremiumOnly(true)}
+            className={`px-6 py-2 font-semibold uppercase tracking-[0.1em] transition rounded-lg flex items-center gap-2 ${
+              showPremiumOnly
+                ? 'bg-purple-700 text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Crown size={16} />
+            Premium
+          </button>
+        )}
+        {userTier === 'free' && (
+          <Link
+            to="/users/profile"
+            className="px-6 py-2 font-semibold uppercase tracking-[0.1em] transition rounded-lg flex items-center gap-2 bg-purple-700/50 text-purple-200 hover:bg-purple-700"
+          >
+            <Crown size={16} />
+            Upgrade
+          </Link>
+        )}
+      </div>
+
       {hero && (
         <section
           className="relative -mx-6 min-h-[520px] overflow-hidden bg-cover bg-center px-6 py-10 md:rounded-lg"
