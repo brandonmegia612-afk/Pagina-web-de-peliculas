@@ -20,6 +20,7 @@ import Notifications from './pages/users/Notifications';
 import Profile from './pages/users/Profile';
 import Search from './pages/users/Search';
 import Subscription from './pages/users/Subscription';
+import SubscriptionPayment from './pages/users/SubscriptionPayment';
 import Login from './pages/users/auth/Login';
 import Register from './pages/users/auth/Register';
 import Termino from './pages/users/Termino';
@@ -85,6 +86,7 @@ function App() {
               <Route path="contact" element={<Contacto />} />
               <Route path="search" element={<Search />} />
               <Route path="subscription" element={<Subscription />} />
+              <Route path="subscription/payment" element={<SubscriptionPayment />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
               <Route path="terminos" element={<Termino />} />

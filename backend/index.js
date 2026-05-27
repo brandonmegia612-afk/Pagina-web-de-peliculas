@@ -247,6 +247,7 @@ const publicUser = user => ({
   dateOfBirth: user.dateOfBirth,
   role: user.role,
   verified: user.verified,
+  subscriptionTier: user.subscriptionTier,
 });
 
 const createSession = user => {
@@ -409,7 +410,7 @@ const seedAdminUser = async () => {
 
 app.get('/api/users', authRequired, adminRequired, async (req, res) => {
   const users = await User.findAll({
-    attributes: ['id', 'name', 'email', 'phone', 'dateOfBirth', 'role', 'verified'],
+    attributes: ['id', 'name', 'email', 'phone', 'dateOfBirth', 'role', 'verified', 'subscriptionTier'],
     include: [{ model: Subscription }],
     order: [['id', 'ASC']],
   });
@@ -776,13 +777,17 @@ app.post('/api/subscription', authRequired, async (req, res) => {
   const subscription = existingSubscription
     ? await existingSubscription.update(values)
     : await Subscription.create(values);
+  const updatedUser = await req.user.update({ subscriptionTier: 'premium' });
 
   await Email.create({
     subject: 'Pago de suscripcion recibido',
     sender: req.user.email,
   });
 
-  return res.status(201).json(subscription);
+  return res.status(201).json({
+    subscription,
+    user: publicUser(updatedUser),
+  });
 });
 
 app.post('/api/comments', authRequired, async (req, res) => {
