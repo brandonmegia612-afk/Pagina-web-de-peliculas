@@ -38,6 +38,7 @@ const MoviePlayer = () => {
   const [rating, setRating] = useState(5);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [selectedEpisodeIndex, setSelectedEpisodeIndex] = useState(0);
 
   useEffect(() => {
     const user = localStorage.getItem('user');
@@ -59,7 +60,10 @@ const MoviePlayer = () => {
       .get(`/api/content/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then(response => setItem(response.data))
+      .then(response => {
+        setItem(response.data);
+        setSelectedEpisodeIndex(0);
+      })
       .catch(err => {
         if (err.response?.status === 401) {
           localStorage.removeItem('token');
@@ -107,6 +111,11 @@ const MoviePlayer = () => {
     }
   };
 
+  const episodes = (item?.SeriesEpisodes || []).slice().sort((a, b) => (a.episodeNumber || 0) - (b.episodeNumber || 0));
+  const selectedEpisode = episodes[selectedEpisodeIndex] || episodes[0];
+  const playerUrl = item?.type === 'series' ? selectedEpisode?.embedUrl : item?.embedUrl;
+  const playerTitle = item?.type === 'series' && selectedEpisode ? `${item.title} - ${selectedEpisode.title}` : item?.title;
+
   const handleDeleteComment = async (commentId) => {
     if (!window.confirm('¿Eliminar este comentario?')) return;
 
@@ -146,8 +155,8 @@ const MoviePlayer = () => {
           <section className="overflow-hidden rounded-lg border border-red-900/50 bg-black shadow-2xl shadow-black/60">
             <div className="aspect-video bg-zinc-950">
               <iframe
-                src={getEmbedUrl(item.embedUrl)}
-                title={item.title}
+                src={getEmbedUrl(playerUrl)}
+                title={playerTitle}
                 allow="fullscreen; autoplay; encrypted-media"
                 allowFullScreen
                 className="h-full w-full border-0"
@@ -159,8 +168,35 @@ const MoviePlayer = () => {
             <p className="text-sm font-black uppercase tracking-[0.3em] text-red-300">{item.category || 'general'}</p>
             <h1 className="text-4xl font-black uppercase text-white md:text-6xl">{item.title}</h1>
             <p className="text-lg leading-8 text-zinc-300">{item.description || 'Sin descripcion'}</p>
-            <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">Duracion aproximada: {item.durationMinutes || 0} minutos</p>
+            <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
+              {item.type === 'series' ? `${episodes.length} capitulos disponibles` : `Duracion aproximada: ${item.durationMinutes || 0} minutos`}
+            </p>
           </section>
+
+          {item.type === 'series' && (
+            <section className="max-w-5xl space-y-4 rounded-lg border border-zinc-800 bg-zinc-950/70 p-4">
+              <h2 className="text-2xl font-black uppercase tracking-[0.18em] text-white">Capitulos</h2>
+              <div className="grid gap-3 md:grid-cols-2">
+                {episodes.map((episode, index) => (
+                  <button
+                    key={episode.id || index}
+                    type="button"
+                    onClick={() => setSelectedEpisodeIndex(index)}
+                    className={`rounded-lg border p-4 text-left transition ${
+                      selectedEpisodeIndex === index
+                        ? 'border-red-500 bg-red-950/50 text-white'
+                        : 'border-zinc-800 bg-black/50 text-gray-300 hover:border-red-700'
+                    }`}
+                  >
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-red-300">Capitulo {episode.episodeNumber}</p>
+                    <h3 className="mt-1 text-lg font-bold">{episode.title}</h3>
+                    {episode.description && <p className="mt-2 line-clamp-2 text-sm text-gray-400">{episode.description}</p>}
+                    <p className="mt-2 text-xs uppercase tracking-[0.14em] text-zinc-500">{episode.durationMinutes || 0} minutos</p>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
           {userTier === 'premium' && (
             <>

@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const { Sequelize, DataTypes } = require('sequelize');
+const { Sequelize, DataTypes, Op } = require('sequelize');
 
 const app = express();
 app.use(cors());
@@ -243,6 +243,29 @@ const Comment = sequelize.define('Comment', {
   },
 });
 
+const SeriesEpisode = sequelize.define('SeriesEpisode', {
+  title: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  episodeNumber: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  embedUrl: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
+  durationMinutes: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+});
+
 User.hasMany(AccessLog);
 AccessLog.belongsTo(User);
 User.hasOne(Subscription);
@@ -251,6 +274,8 @@ User.hasMany(Comment);
 Comment.belongsTo(User);
 ContentItem.hasMany(Comment);
 Comment.belongsTo(ContentItem);
+ContentItem.hasMany(SeriesEpisode, { onDelete: 'CASCADE' });
+SeriesEpisode.belongsTo(ContentItem);
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'brandonmegia612@gmail.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '336796uy';
@@ -461,16 +486,33 @@ app.get('/api/emails', authRequired, adminRequired, async (req, res) => {
   res.json(emails);
 });
 
+const normalizeEpisodes = episodes =>
+  Array.isArray(episodes)
+    ? episodes
+        .map((episode, index) => ({
+          title: String(episode.title || '').trim() || `Capitulo ${index + 1}`,
+          episodeNumber: Number(episode.episodeNumber || index + 1),
+          embedUrl: normalizeEmbedUrl(episode.embedUrl || ''),
+          durationMinutes: Number(episode.durationMinutes || 0) || null,
+          description: episode.description || null,
+        }))
+        .filter(episode => episode.embedUrl)
+    : [];
+
 app.get('/api/admin/content', authRequired, adminRequired, async (req, res) => {
-  const items = await ContentItem.findAll({ order: [['createdAt', 'DESC']] });
+  const items = await ContentItem.findAll({
+    include: [{ model: SeriesEpisode, order: [['episodeNumber', 'ASC']] }],
+    order: [['createdAt', 'DESC']],
+  });
   res.json(items);
 });
 
 app.post('/api/admin/content', authRequired, adminRequired, async (req, res) => {
-  const { title, description, type, embedUrl, body, durationMinutes, category, coverUrl, featured, premiumOnly } = req.body;
-  const normalizedType = type === 'blog' ? 'blog' : 'video';
+  const { title, description, type, embedUrl, body, durationMinutes, category, coverUrl, featured, premiumOnly, episodes } = req.body;
+  const normalizedType = type === 'blog' ? 'blog' : type === 'series' ? 'series' : 'video';
+  const normalizedEpisodes = normalizeEpisodes(episodes);
 
-  if (!title || (normalizedType === 'video' && !embedUrl) || (normalizedType === 'blog' && !body)) {
+  if (!title || (normalizedType === 'video' && !embedUrl) || (normalizedType === 'blog' && !body) || (normalizedType === 'series' && normalizedEpisodes.length === 0)) {
     return res.status(400).json({ message: 'Completa titulo y contenido requerido.' });
   }
 
@@ -480,18 +522,59 @@ app.post('/api/admin/content', authRequired, adminRequired, async (req, res) => 
     type: normalizedType,
     embedUrl: normalizedType === 'video' ? normalizeEmbedUrl(embedUrl) : null,
     body: normalizedType === 'blog' ? body : null,
-    durationMinutes: normalizedType === 'video' ? Number(durationMinutes || 0) : null,
-    category: normalizedType === 'video' ? category || 'general' : 'blog',
-    coverUrl: normalizedType === 'video' ? coverUrl || null : null,
-    featured: normalizedType === 'video' ? Boolean(featured) : false,
+    durationMinutes: normalizedType === 'video' || normalizedType === 'series' ? Number(durationMinutes || 0) : null,
+    category: normalizedType === 'video' || normalizedType === 'series' ? category || 'general' : 'blog',
+    coverUrl: normalizedType === 'video' || normalizedType === 'series' ? coverUrl || null : null,
+    featured: normalizedType === 'video' || normalizedType === 'series' ? Boolean(featured) : false,
     premiumOnly: Boolean(premiumOnly),
     active: true,
   });
 
+  if (normalizedType === 'series') {
+    await SeriesEpisode.bulkCreate(normalizedEpisodes.map(episode => ({ ...episode, ContentItemId: item.id })));
+  }
+
   res.status(201).json(item);
 });
 
+app.put('/api/admin/content/:id', authRequired, adminRequired, async (req, res) => {
+  const item = await ContentItem.findByPk(req.params.id);
+  if (!item) {
+    return res.status(404).json({ message: 'Contenido no encontrado.' });
+  }
+
+  const { title, description, type, embedUrl, body, durationMinutes, category, coverUrl, featured, premiumOnly, episodes } = req.body;
+  const normalizedType = type === 'blog' ? 'blog' : type === 'series' ? 'series' : 'video';
+  const normalizedEpisodes = normalizeEpisodes(episodes);
+
+  if (!title || (normalizedType === 'video' && !embedUrl) || (normalizedType === 'blog' && !body) || (normalizedType === 'series' && normalizedEpisodes.length === 0)) {
+    return res.status(400).json({ message: 'Completa titulo y contenido requerido.' });
+  }
+
+  await item.update({
+    title,
+    description,
+    type: normalizedType,
+    embedUrl: normalizedType === 'video' ? normalizeEmbedUrl(embedUrl) : null,
+    body: normalizedType === 'blog' ? body : null,
+    durationMinutes: normalizedType === 'video' || normalizedType === 'series' ? Number(durationMinutes || 0) : null,
+    category: normalizedType === 'video' || normalizedType === 'series' ? category || 'general' : 'blog',
+    coverUrl: normalizedType === 'video' || normalizedType === 'series' ? coverUrl || null : null,
+    featured: normalizedType === 'video' || normalizedType === 'series' ? Boolean(featured) : false,
+    premiumOnly: Boolean(premiumOnly),
+  });
+
+  await SeriesEpisode.destroy({ where: { ContentItemId: item.id } });
+  if (normalizedType === 'series') {
+    await SeriesEpisode.bulkCreate(normalizedEpisodes.map(episode => ({ ...episode, ContentItemId: item.id })));
+  }
+
+  const updatedItem = await ContentItem.findByPk(item.id, { include: [{ model: SeriesEpisode }] });
+  res.json(updatedItem);
+});
+
 app.delete('/api/admin/content/:id', authRequired, adminRequired, async (req, res) => {
+  await SeriesEpisode.destroy({ where: { ContentItemId: req.params.id } });
   await ContentItem.destroy({ where: { id: req.params.id } });
   res.sendStatus(204);
 });
@@ -499,7 +582,9 @@ app.delete('/api/admin/content/:id', authRequired, adminRequired, async (req, re
 app.get('/api/content', authRequired, async (req, res) => {
   const { type } = req.query;
   const where = { active: true };
-  if (type === 'video' || type === 'blog') {
+  if (type === 'video') {
+    where.type = { [Op.in]: ['video', 'series'] };
+  } else if (type === 'blog') {
     where.type = type;
   }
 
@@ -510,7 +595,11 @@ app.get('/api/content', authRequired, async (req, res) => {
   }
   // Premium users see all content
 
-  const items = await ContentItem.findAll({ where, order: [['createdAt', 'DESC']] });
+  const items = await ContentItem.findAll({
+    where,
+    include: [{ model: SeriesEpisode }],
+    order: [['createdAt', 'DESC']],
+  });
   res.json(items);
 });
 
@@ -521,6 +610,10 @@ app.get('/api/content/:id', authRequired, async (req, res) => {
       active: true,
     },
     include: [
+      {
+        model: SeriesEpisode,
+        order: [['episodeNumber', 'ASC']],
+      },
       {
         model: Comment,
         include: [{ model: User, attributes: ['id', 'name'] }],

@@ -93,7 +93,9 @@ const MovieCard = ({ item }) => (
     <div className="space-y-3 p-4">
       <p className="line-clamp-2 min-h-[3rem] text-sm leading-6 text-zinc-300">{item.description || 'Sin descripcion'}</p>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-xs uppercase tracking-[0.16em] text-zinc-500">{item.durationMinutes || 0} min</span>
+        <span className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+          {item.type === 'series' ? `${item.SeriesEpisodes?.length || 0} capitulos` : `${item.durationMinutes || 0} min`}
+        </span>
         <Link
           to={`/users/movies/${item.id}`}
           target="_blank"
