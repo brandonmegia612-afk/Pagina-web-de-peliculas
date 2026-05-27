@@ -23,6 +23,7 @@ const Subscription = () => {
     { icon: Zap, text: 'Mejor calidad de video' },
     { icon: Crown, text: 'Beneficios exclusivos' },
   ];
+  const isPremium = user?.subscriptionTier === 'premium';
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 px-4 py-8">
@@ -34,18 +35,23 @@ const Subscription = () => {
       </section>
 
       {user && (
-        <div className="rounded-lg border border-blue-500/30 bg-blue-950/20 p-6 text-center">
-          <p className="mb-2 text-gray-300">Tu plan actual</p>
-          <h2 className="text-3xl font-black uppercase text-blue-400">
-            {user.subscriptionTier === 'premium' ? (
+        <div className={`rounded-lg border p-6 text-center ${isPremium ? 'border-purple-400/60 bg-purple-950/40 shadow-2xl shadow-purple-950/30' : 'border-blue-500/30 bg-blue-950/20'}`}>
+          <p className="mb-2 text-gray-300">Tu estado actual</p>
+          <h2 className={`text-3xl font-black uppercase ${isPremium ? 'text-purple-200' : 'text-blue-400'}`}>
+            {isPremium ? (
               <>
                 <Crown className="mr-2 inline" size={32} fill="currentColor" />
-                Premium
+                Cliente Premium
               </>
             ) : (
-              'Basico Gratuito'
+              'Cliente Basico'
             )}
           </h2>
+          {isPremium && (
+            <p className="mt-3 text-purple-100">
+              Tu acceso Premium esta activo. Ya puedes ver contenido exclusivo y comentar.
+            </p>
+          )}
         </div>
       )}
 
@@ -124,8 +130,11 @@ const Subscription = () => {
             ))}
           </ul>
 
-          {user?.subscriptionTier === 'premium' ? (
-            <p className="text-center font-semibold text-purple-300">Plan actual</p>
+          {isPremium ? (
+            <div className="rounded-lg border border-purple-300/40 bg-purple-500/10 p-4 text-center">
+              <p className="font-black uppercase tracking-[0.12em] text-purple-100">Cliente Premium activo</p>
+              <p className="mt-1 text-sm text-purple-200">Gracias por ser parte del plan Premium.</p>
+            </div>
           ) : (
             <Link
               to="/users/subscription/payment"

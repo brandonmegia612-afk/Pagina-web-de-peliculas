@@ -1,6 +1,7 @@
 import React from 'react';
 
 const ProfileCard = ({ user }) => {
+  const isPremium = user.subscriptionTier === 'premium';
   const initials = (user.name || 'Usuario')
     .split(' ')
     .map(part => part[0])
@@ -14,6 +15,7 @@ const ProfileCard = ({ user }) => {
     { label: 'Telefono', value: user.phone || 'No disponible' },
     { label: 'Fecha de nacimiento', value: user.dateOfBirth || 'No disponible' },
     { label: 'Tipo de cuenta', value: user.role === 'admin' ? 'Administrador' : 'Usuario normal' },
+    { label: 'Estado Premium', value: isPremium ? 'Cliente Premium' : 'Cliente Basico' },
     { label: 'Verificado', value: user.verified ? 'Si' : 'No' },
   ];
 
@@ -26,6 +28,11 @@ const ProfileCard = ({ user }) => {
         <div>
           <h2 className="text-4xl font-black uppercase tracking-[0.2em] text-white">{user.name || 'Usuario'}</h2>
           <p className="mt-2 text-lg text-red-300">Datos personales</p>
+          {isPremium && (
+            <p className="mt-4 inline-block rounded-full border border-purple-400/50 bg-purple-700/30 px-5 py-2 text-sm font-black uppercase tracking-[0.15em] text-purple-100">
+              Cliente Premium
+            </p>
+          )}
         </div>
       </div>
 
