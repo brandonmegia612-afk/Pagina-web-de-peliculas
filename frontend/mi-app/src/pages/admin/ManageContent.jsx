@@ -20,11 +20,21 @@ const emptyForm = {
 
 const categories = [
   { value: 'destacados', label: 'Destacados' },
+  { value: 'series', label: 'Series' },
+  { value: 'kpop', label: 'K-pop' },
+  { value: 'novelas_coreanas', label: 'Novelas surcoreanas' },
+  { value: 'doramas', label: 'Doramas' },
+  { value: 'animaciones', label: 'Animaciones' },
+  { value: 'infantil', label: 'Ninos' },
+  { value: 'adultos', label: 'Adultos' },
   { value: 'terror', label: 'Terror' },
   { value: 'suspenso', label: 'Suspenso' },
   { value: 'anime', label: 'Anime' },
   { value: 'accion', label: 'Accion' },
   { value: 'drama', label: 'Drama' },
+  { value: 'romance', label: 'Romance' },
+  { value: 'comedia', label: 'Comedia' },
+  { value: 'ciencia_ficcion', label: 'Ciencia ficcion' },
   { value: 'documentales', label: 'Documentales' },
   { value: 'general', label: 'General' },
 ];

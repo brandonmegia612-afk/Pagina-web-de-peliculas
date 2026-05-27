@@ -5,14 +5,62 @@ import { ChevronLeft, ChevronRight, Play, Star, Crown } from 'lucide-react';
 
 const categoryLabels = {
   destacados: 'Destacados',
+  series: 'Series',
+  kpop: 'K-pop',
+  novelas_coreanas: 'Novelas surcoreanas',
+  doramas: 'Doramas',
+  animaciones: 'Animaciones',
+  infantil: 'Ninos',
+  adultos: 'Adultos',
   terror: 'Terror',
   suspenso: 'Suspenso',
   anime: 'Anime',
   accion: 'Accion',
   drama: 'Drama',
+  romance: 'Romance',
+  comedia: 'Comedia',
+  ciencia_ficcion: 'Ciencia ficcion',
   documentales: 'Documentales',
   general: 'General',
 };
+
+const catalogSections = [
+  { value: 'todos', label: 'Todo' },
+  { value: 'series', label: 'Series' },
+  { value: 'kpop', label: 'K-pop' },
+  { value: 'novelas_coreanas', label: 'Novelas coreanas' },
+  { value: 'doramas', label: 'Doramas' },
+  { value: 'animaciones', label: 'Animaciones' },
+  { value: 'infantil', label: 'Ninos' },
+  { value: 'adultos', label: 'Adultos' },
+  { value: 'anime', label: 'Anime' },
+  { value: 'accion', label: 'Accion' },
+  { value: 'terror', label: 'Terror' },
+  { value: 'romance', label: 'Romance' },
+  { value: 'comedia', label: 'Comedia' },
+  { value: 'documentales', label: 'Documentales' },
+];
+
+const categoryOrder = [
+  'destacados',
+  'series',
+  'kpop',
+  'novelas_coreanas',
+  'doramas',
+  'animaciones',
+  'infantil',
+  'adultos',
+  'anime',
+  'accion',
+  'terror',
+  'suspenso',
+  'drama',
+  'romance',
+  'comedia',
+  'ciencia_ficcion',
+  'documentales',
+  'general',
+];
 
 const fallbackCover = item =>
   `linear-gradient(135deg, rgba(185,28,28,.92), rgba(17,24,39,.96)), radial-gradient(circle at top, rgba(250,204,21,.35), transparent 42%)`;
@@ -67,6 +115,7 @@ const Movies = () => {
   const [heroIndex, setHeroIndex] = useState(0);
   const [userTier, setUserTier] = useState('free');
   const [showPremiumOnly, setShowPremiumOnly] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('todos');
 
   useEffect(() => {
     const user = localStorage.getItem('user');
@@ -101,14 +150,18 @@ const Movies = () => {
       });
   }, [token]);
 
-  const featuredItems = useMemo(() => items.filter(item => item.featured), [items]);
   const filteredItems = useMemo(() => {
+    let nextItems = items;
     if (showPremiumOnly) {
-      return items.filter(item => item.premiumOnly);
+      nextItems = nextItems.filter(item => item.premiumOnly);
     }
-    return items;
-  }, [items, showPremiumOnly]);
-  const heroItems = featuredItems.length ? featuredItems : filteredItems;
+    if (selectedCategory !== 'todos') {
+      nextItems = nextItems.filter(item => (item.category || 'general') === selectedCategory);
+    }
+    return nextItems;
+  }, [items, showPremiumOnly, selectedCategory]);
+  const filteredFeaturedItems = useMemo(() => filteredItems.filter(item => item.featured), [filteredItems]);
+  const heroItems = filteredFeaturedItems.length ? filteredFeaturedItems : filteredItems;
   const hero = heroItems[heroIndex] || heroItems[0];
   const rows = useMemo(() => {
     const groups = filteredItems.reduce((acc, item) => {
@@ -119,15 +172,18 @@ const Movies = () => {
     }, {});
 
     const ordered = [];
-    const highlighted = [...featuredItems, ...(groups.destacados || [])].filter(
+    const highlighted = [...filteredFeaturedItems, ...(groups.destacados || [])].filter(
       (item, index, list) => list.findIndex(candidate => candidate.id === item.id) === index
     );
     if (highlighted.length) ordered.push(['destacados', highlighted]);
+    categoryOrder.forEach(category => {
+      if (category !== 'destacados' && groups[category]) ordered.push([category, groups[category]]);
+    });
     Object.entries(groups).forEach(([category, categoryItems]) => {
-      if (category !== 'destacados') ordered.push([category, categoryItems]);
+      if (!categoryOrder.includes(category)) ordered.push([category, categoryItems]);
     });
     return ordered;
-  }, [filteredItems, featuredItems]);
+  }, [filteredItems, filteredFeaturedItems]);
 
   useEffect(() => {
     setHeroIndex(0);
@@ -167,7 +223,28 @@ const Movies = () => {
 
   return (
     <div className="space-y-10">
-      <div className="flex gap-3 border-b border-red-700/30 pb-4">
+      <div className="space-y-4 border-b border-red-700/30 pb-4">
+        <div>
+          <p className="mb-3 text-sm font-black uppercase tracking-[0.22em] text-red-300">Catalogo interno</p>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {catalogSections.map(section => (
+              <button
+                key={section.value}
+                type="button"
+                onClick={() => setSelectedCategory(section.value)}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-[0.08em] transition ${
+                  selectedCategory === section.value
+                    ? 'bg-white text-black'
+                    : 'bg-zinc-900 text-gray-300 hover:bg-zinc-800 hover:text-white'
+                }`}
+              >
+                {section.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-3">
         <button
           onClick={() => setShowPremiumOnly(false)}
           className={`px-6 py-2 font-semibold uppercase tracking-[0.1em] transition rounded-lg ${
@@ -200,6 +277,7 @@ const Movies = () => {
             Upgrade
           </Link>
         )}
+        </div>
       </div>
 
       {hero && (
@@ -282,6 +360,9 @@ const Movies = () => {
       ))}
 
       {items.length === 0 && <div className="rounded-lg bg-white/5 p-6 text-gray-300">Aun no hay peliculas publicadas.</div>}
+      {items.length > 0 && filteredItems.length === 0 && (
+        <div className="rounded-lg bg-white/5 p-6 text-gray-300">No hay titulos en esta seccion todavia.</div>
+      )}
     </div>
   );
 };
