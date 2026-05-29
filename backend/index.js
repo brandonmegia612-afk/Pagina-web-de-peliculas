@@ -277,8 +277,8 @@ Comment.belongsTo(ContentItem);
 ContentItem.hasMany(SeriesEpisode, { onDelete: 'CASCADE' });
 SeriesEpisode.belongsTo(ContentItem);
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'brandonmegia612@gmail.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '336796uy';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@example.com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me-password';
 const sessions = new Map();
 
 const publicUser = user => ({
@@ -431,7 +431,7 @@ const seedAdminUser = async () => {
 
   if (!admin) {
     await User.create({
-      name: 'Brandon Megia',
+      name: 'Admin',
       email: ADMIN_EMAIL,
       password: hash,
       phone: '0000000000',
@@ -444,7 +444,7 @@ const seedAdminUser = async () => {
   }
 
   await User.update(
-    { name: 'Brandon Megia', password: hash, role: 'admin', verified: true },
+    { name: 'Admin', password: hash, role: 'admin', verified: true },
     { where: { email: ADMIN_EMAIL } }
   );
   console.log('Admin user updated successfully');

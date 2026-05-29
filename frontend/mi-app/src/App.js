@@ -92,7 +92,9 @@ function App() {
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
               <Route path="forgot-password" element={<ForgotPassword />} />
+              <Route path="restablecer-contrasena" element={<ForgotPassword />} />
               <Route path="reset-password" element={<ResetPassword />} />
+              <Route path="cambiar-contrasena" element={<ResetPassword />} />
               <Route path="terminos" element={<Termino />} />
             </Routes>
           </LayoutUser>

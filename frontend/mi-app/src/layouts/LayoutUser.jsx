@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, Film, FileText, Bell, User, Search, LogOut, CreditCard } from 'lucide-react';
+import { Home, Film, FileText, Bell, User, Search, LogOut, CreditCard, KeyRound } from 'lucide-react';
 import './LayoutUser.css';
 
 const LayoutUser = ({ children }) => {
@@ -15,7 +15,7 @@ const LayoutUser = ({ children }) => {
       try {
         const userData = JSON.parse(user);
         setUserName(userData.nombre || userData.name || userData.username || 'Usuario');
-        setIsAdmin(userData.rol === 'admin' || userData.isAdmin === true);
+        setIsAdmin(userData.role === 'admin' || userData.rol === 'admin' || userData.isAdmin === true);
       } catch {
         setUserName('Usuario');
       }
@@ -52,6 +52,7 @@ const LayoutUser = ({ children }) => {
             <Link to="/users/search" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Buscar</Link>
             <Link to="/users/login" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Ingresar</Link>
             <Link to="/users/register" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Registrar</Link>
+            <Link to="/users/restablecer-contrasena" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Restablecer</Link>
             <Link to="/users/terminos" className="text-base md:text-lg font-vito-bold tracking-widest uppercase hover:text-red-400">Términos y condiciones </Link>
           </div>
           <div className="flex items-center gap-4 ml-4">
@@ -117,6 +118,12 @@ const LayoutUser = ({ children }) => {
               <Link to="/users/profile" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-300 hover:text-red-400 transition rounded-lg hover:bg-red-900/20">
                 <User className="w-5 h-5" />
                 <span className="text-xs font-semibold uppercase">Perfil</span>
+              </Link>
+            </li>
+            <li>
+              <Link to="/users/restablecer-contrasena" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-300 hover:text-red-400 transition rounded-lg hover:bg-red-900/20">
+                <KeyRound className="w-5 h-5" />
+                <span className="text-xs font-semibold uppercase">Clave</span>
               </Link>
             </li>
             <li>

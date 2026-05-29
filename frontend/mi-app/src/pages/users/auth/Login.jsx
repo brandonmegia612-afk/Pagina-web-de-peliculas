@@ -62,8 +62,8 @@ const Login = () => {
         {error && <div className="rounded-3xl bg-red-900/80 p-4 text-sm text-red-200">{error}</div>}
 
         <div className="text-right">
-          <Link to="/users/forgot-password" className="text-sm text-red-300 hover:text-white">
-            Olvidaste tu contrasena?
+          <Link to="/users/restablecer-contrasena" className="text-sm text-red-300 hover:text-white">
+            Restablecer contrasena
           </Link>
         </div>
 

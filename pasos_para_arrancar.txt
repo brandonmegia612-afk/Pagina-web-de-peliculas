@@ -25,8 +25,8 @@ El frontend usa automaticamente la misma IP del navegador y llama al backend en 
 
 4. Entrar como administrador:
 
-Correo: brandonmegia612@gmail.com
-Contrasena: 336796uy
+Correo: admin@example.com
+Contrasena: cambia-esta-contrasena
 
 5. Resultado esperado:
 

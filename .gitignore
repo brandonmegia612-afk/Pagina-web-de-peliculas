@@ -13,6 +13,7 @@ frontend/mi-app/build/
 *.env.production.local
 
 # Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -27,3 +28,8 @@ Thumbs.db
 # SQLite local database
 backend/database.sqlite
 .vercel
+
+# Local-only generated or sensitive files
+/package-lock.json
+/frontend/package-lock.json
+/recovery-codes.txt

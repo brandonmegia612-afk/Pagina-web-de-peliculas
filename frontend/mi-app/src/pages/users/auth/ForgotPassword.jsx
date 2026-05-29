@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
-  const [resetLink, setResetLink] = useState('');
+  const [resetToken, setResetToken] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -13,14 +13,14 @@ const ForgotPassword = () => {
     event.preventDefault();
     setError('');
     setMessage('');
-    setResetLink('');
+    setResetToken('');
     setLoading(true);
 
     try {
       const response = await axios.post('/api/forgot-password', { email });
       setMessage(response.data.message || 'Revisa las instrucciones para restaurar tu contrasena.');
       if (response.data.resetToken) {
-        setResetLink(`${window.location.origin}/users/reset-password?token=${response.data.resetToken}`);
+        setResetToken(response.data.resetToken);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'No se pudo generar el enlace de restauracion.');
@@ -49,8 +49,8 @@ const ForgotPassword = () => {
 
         {error && <div className="rounded-3xl bg-red-900/80 p-4 text-sm text-red-200">{error}</div>}
         {message && <div className="rounded-3xl bg-green-900/60 p-4 text-sm text-green-100">{message}</div>}
-        {resetLink && (
-          <Link to={`/users/reset-password?token=${resetLink.split('token=')[1]}`} className="block rounded-3xl border border-red-500/40 bg-red-950/40 p-4 text-sm text-red-100 hover:bg-red-900/50">
+        {resetToken && (
+          <Link to={`/users/cambiar-contrasena?token=${resetToken}`} className="block rounded-3xl border border-red-500/40 bg-red-950/40 p-4 text-sm text-red-100 hover:bg-red-900/50">
             Abrir enlace de restauracion
           </Link>
         )}

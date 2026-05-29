@@ -26,8 +26,8 @@ services:
       DATABASE_URL: postgres://username:password@db:5432/database
       NODE_ENV: production
       PORT: 3001
-      ADMIN_EMAIL: brandonmegia612@gmail.com
-      ADMIN_PASSWORD: 336796uy
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: cambia-esta-contrasena
     restart: unless-stopped
 
   frontend:
