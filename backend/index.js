@@ -33,7 +33,7 @@ const User = sequelize.define('User', {
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   phone: {
     type: DataTypes.STRING,
@@ -43,6 +43,10 @@ const User = sequelize.define('User', {
     type: DataTypes.DATEONLY,
     allowNull: true,
   },
+  country: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   role: {
     type: DataTypes.STRING,
     defaultValue: 'user',
@@ -50,6 +54,10 @@ const User = sequelize.define('User', {
   verified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
+  },
+  googleId: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   subscriptionTier: {
     type: DataTypes.STRING,
@@ -66,6 +74,13 @@ const User = sequelize.define('User', {
   resetPasswordExpires: {
     type: DataTypes.DATE,
     allowNull: true,
+  },
+  resetMethod: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      isIn: [['email', 'phone']],
+    },
   },
 });
 
@@ -287,9 +302,11 @@ const publicUser = user => ({
   email: user.email,
   phone: user.phone,
   dateOfBirth: user.dateOfBirth,
+  country: user.country,
   role: user.role,
   verified: user.verified,
   subscriptionTier: user.subscriptionTier,
+  googleId: user.googleId,
 });
 
 const createSession = user => {
@@ -759,17 +776,17 @@ app.delete('/api/admin/access-logs', authRequired, adminRequired, async (req, re
 });
 
 app.post('/api/register', async (req, res) => {
-  const { name, email, password, phone, dateOfBirth } = req.body;
+  const { name, email, password, phone, dateOfBirth, country, googleId } = req.body;
   const normalizedEmail = normalizeEmail(email);
-  if (!name || !email || !password || !phone || !dateOfBirth) {
-    return res.status(400).json({ message: 'Nombre, email, contrasena, telefono y fecha de nacimiento son obligatorios.' });
+  if (!name || !email || !phone || !dateOfBirth) {
+    return res.status(400).json({ message: 'Nombre, email, telefono, fecha de nacimiento y pais son obligatorios.' });
   }
 
   if (!isValidEmail(normalizedEmail)) {
     return res.status(400).json({ message: 'Ingresa un correo electronico valido.' });
   }
 
-  if (password.length < 8) {
+  if (!googleId && (!password || password.length < 8)) {
     return res.status(400).json({ message: 'La contrasena debe tener al menos 8 caracteres.' });
   }
 
@@ -778,14 +795,16 @@ app.post('/api/register', async (req, res) => {
     return res.status(409).json({ message: 'El email ya existe. Usa otro correo o inicia sesion.' });
   }
 
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  const hashedPassword = googleId ? null : bcrypt.hashSync(password, 10);
   const newUser = await User.create({
     name,
     email: normalizedEmail,
     password: hashedPassword,
     phone,
     dateOfBirth,
-    verified: false,
+    country,
+    googleId: googleId || null,
+    verified: googleId ? true : false,
   });
   const token = createSession(newUser);
   await recordAccess(req, newUser, 'register');
@@ -797,19 +816,31 @@ app.post('/api/register', async (req, res) => {
 });
 
 app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, country, googleToken } = req.body;
   const normalizedEmail = normalizeEmail(email);
 
+  // Verificar si el email existe
+  const user = await User.findOne({ where: { email: normalizedEmail } });
+  if (!user) {
+    return res.status(401).json({ message: 'El correo no existe. Registrate o usa otra cuenta.' });
+  }
+
+  // Login con Google - sin necesidad de contraseña
+  if (googleToken && user.googleId) {
+    const token = createSession(user);
+    await recordAccess(req, user, 'login-google');
+    return res.json({
+      user: publicUser(user),
+      token,
+    });
+  }
+
+  // Login tradicional con contraseña
   if (!email || !password) {
     return res.status(400).json({ message: 'Email y contrasena son requeridos.' });
   }
 
-  const user = await User.findOne({ where: { email: normalizedEmail } });
-  if (!user) {
-    return res.status(401).json({ message: 'Email o contrasena incorrectos.' });
-  }
-
-  const validPassword = bcrypt.compareSync(password, user.password);
+  const validPassword = bcrypt.compareSync(password, user.password || '');
   if (!validPassword) {
     return res.status(401).json({ message: 'Email o contrasena incorrectos.' });
   }
@@ -824,7 +855,8 @@ app.post('/api/login', async (req, res) => {
 });
 
 app.post('/api/forgot-password', async (req, res) => {
-  const normalizedEmail = normalizeEmail(req.body.email);
+  const { email } = req.body;
+  const normalizedEmail = normalizeEmail(email);
 
   if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
     return res.status(400).json({ message: 'Ingresa un correo electronico valido.' });
@@ -832,31 +864,86 @@ app.post('/api/forgot-password', async (req, res) => {
 
   const user = await User.findOne({ where: { email: normalizedEmail } });
   if (!user) {
-    return res.json({ message: 'Si el correo existe, se genero un enlace de restauracion.' });
+    // Por seguridad, no revelar si el email existe o no
+    return res.json({ message: 'Si el correo existe, recibiras instrucciones para restaurar tu contrasena.' });
   }
 
+  // Generar código de 6 dígitos
+  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
   const resetToken = crypto.randomBytes(24).toString('hex');
+  
   await user.update({
     resetPasswordToken: resetToken,
-    resetPasswordExpires: new Date(Date.now() + 60 * 60 * 1000),
+    resetPasswordExpires: new Date(Date.now() + 15 * 60 * 1000), // 15 minutos
   });
 
+  // Guardar código en sesión (en producción, usar Redis o base de datos)
+  const verificationKey = `verify_${resetToken}`;
+  sessions.set(verificationKey, {
+    code: verificationCode,
+    email: normalizedEmail,
+    expiresAt: Date.now() + 15 * 60 * 1000,
+  });
+
+  // En producción, aquí enviarías el email real
+  // Por ahora, retornamos el código para desarrollo
+  console.log(`📧 Código de verificación para ${normalizedEmail}: ${verificationCode}`);
+
   await Email.create({
-    subject: 'Restauracion de contrasena',
+    subject: 'Tu código de verificación - 15 minutos',
     sender: user.email,
   });
 
   return res.json({
-    message: 'Se genero un enlace de restauracion.',
+    message: 'Se envio un codigo de verificacion a tu correo electronico.',
     resetToken,
+    // En desarrollo: mostrar código (remover en producción)
+    verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined,
+  });
+});
+
+app.post('/api/verify-email-code', async (req, res) => {
+  const { resetToken, code } = req.body;
+
+  if (!resetToken || !code) {
+    return res.status(400).json({ message: 'Token y codigo son requeridos.' });
+  }
+
+  const verificationKey = `verify_${resetToken}`;
+  const verification = sessions.get(verificationKey);
+
+  if (!verification) {
+    return res.status(400).json({ message: 'El codigo ha expirado. Solicita uno nuevo.' });
+  }
+
+  if (verification.expiresAt < Date.now()) {
+    sessions.delete(verificationKey);
+    return res.status(400).json({ message: 'El codigo ha expirado. Solicita uno nuevo.' });
+  }
+
+  if (verification.code !== String(code).trim()) {
+    return res.status(400).json({ message: 'El codigo es incorrecto.' });
+  }
+
+  // Código verificado correctamente
+  sessions.delete(verificationKey);
+  
+  return res.json({ 
+    verified: true, 
+    message: 'Codigo verificado. Ya puedes restaurar tu contrasena.',
+    email: verification.email,
   });
 });
 
 app.post('/api/reset-password', async (req, res) => {
-  const { token, password } = req.body;
+  const { token, password, verified } = req.body;
 
   if (!token || !password) {
     return res.status(400).json({ message: 'Token y nueva contrasena son obligatorios.' });
+  }
+
+  if (!verified) {
+    return res.status(400).json({ message: 'Debes verificar tu codigo primero.' });
   }
 
   if (String(password).length < 8) {

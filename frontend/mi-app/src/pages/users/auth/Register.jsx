@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
+import CountrySelector from '../../../components/CountrySelector';
 
 const isValidEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 
@@ -24,8 +25,10 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [country, setCountry] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const passwordStrength = getPasswordStrength(password);
 
@@ -33,7 +36,7 @@ const Register = () => {
     event.preventDefault();
     setError('');
 
-    if (!name || !email || !password || !phone || !dateOfBirth) {
+    if (!name || !email || !password || !phone || !dateOfBirth || !country) {
       setError('Todos los campos son obligatorios.');
       return;
     }
@@ -48,8 +51,9 @@ const Register = () => {
       return;
     }
 
+    setLoading(true);
     try {
-      const response = await axios.post('/api/register', { name, email, password, phone, dateOfBirth });
+      const response = await axios.post('/api/register', { name, email, password, phone, dateOfBirth, country });
       if (!response.data?.user || !response.data?.token) {
         throw new Error('Respuesta invalida del servidor.');
       }
@@ -59,7 +63,13 @@ const Register = () => {
       navigate('/users/profile');
     } catch (err) {
       setError(err.response?.data?.message || 'Error al registrarse. Verifica los datos.');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleGoogleRegister = () => {
+    setError('Integracion de Google en desarrollo. Proximamente disponible.');
   };
 
   return (
@@ -67,7 +77,7 @@ const Register = () => {
       <h1 className="text-center text-4xl font-black uppercase tracking-[0.25em] text-red-300">Registrarse</h1>
       <p className="mt-4 text-center text-gray-300">Crea tu cuenta y accede a tu perfil personalizado.</p>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         <div>
           <label className="block text-sm uppercase tracking-[0.2em] text-red-200">Nombre</label>
           <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Tu nombre" className="mt-3 w-full rounded-3xl border border-gray-700 bg-gray-900 px-4 py-3 text-lg text-white focus:border-red-500 focus:outline-none" />
@@ -76,8 +86,10 @@ const Register = () => {
         <div>
           <label className="block text-sm uppercase tracking-[0.2em] text-red-200">Correo</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="correo@ejemplo.com" className="mt-3 w-full rounded-3xl border border-gray-700 bg-gray-900 px-4 py-3 text-lg text-white focus:border-red-500 focus:outline-none" />
-          {email && !isValidEmail(email) && <p className="mt-2 text-sm text-red-300">El correo debe tener formato real, por ejemplo nombre@dominio.com.</p>}
+          {email && !isValidEmail(email) && <p className="mt-2 text-sm text-red-300">Formato invalido.</p>}
         </div>
+
+        <CountrySelector value={country} onChange={setCountry} label="País" required className="space-y-2" />
 
         <div>
           <label className="block text-sm uppercase tracking-[0.2em] text-red-200">Telefono</label>
@@ -111,10 +123,16 @@ const Register = () => {
 
         {error && <div className="rounded-3xl bg-red-900/80 p-4 text-sm text-red-200">{error}</div>}
 
-        <button type="submit" className="w-full rounded-full bg-red-700 px-6 py-3 text-lg font-semibold uppercase tracking-[0.15em] text-white hover:bg-red-600">
-          Crear cuenta
+        <button disabled={loading} type="submit" className="w-full rounded-full bg-red-700 px-6 py-3 text-lg font-semibold uppercase tracking-[0.15em] text-white hover:bg-red-600 disabled:opacity-50">
+          {loading ? 'Creando cuenta...' : 'Crear cuenta'}
         </button>
       </form>
+
+      <div className="mt-6 space-y-4">
+        <button onClick={handleGoogleRegister} className="w-full rounded-full border-2 border-gray-600 px-6 py-3 text-lg font-semibold uppercase tracking-[0.15em] text-white hover:bg-gray-900">
+          📧 Registrarse con Gmail
+        </button>
+      </div>
 
       <p className="mt-6 text-center text-gray-400">
         Ya tienes cuenta? <Link to="/users/login" className="text-red-300 hover:text-white">Inicia sesion</Link>
