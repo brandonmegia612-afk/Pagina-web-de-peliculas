@@ -30,10 +30,7 @@ const ForgotPassword = () => {
       setStep('code');
       
       // Mostrar código en desarrollo
-      if (response.data.verificationCode) {
-        console.log(`🔐 Código de verificación (desarrollo): ${response.data.verificationCode}`);
-        setMessage(`${response.data.message}\n\n🔐 Código: ${response.data.verificationCode} (solo para desarrollo)`);
-      }
+   setMessage(response.data.message);
     } catch (err) {
       setError(err.response?.data?.message || 'No se pudo generar el codigo.');
     } finally {
