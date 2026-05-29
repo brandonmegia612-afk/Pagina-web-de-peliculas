@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "installCommand": "cd frontend/mi-app && npm ci",
-  "buildCommand": "cd frontend/mi-app && npm run build",
+  "installCommand": "npm --prefix frontend/mi-app ci",
+  "buildCommand": "npm --prefix frontend/mi-app run build",
   "outputDirectory": "frontend/mi-app/build",
   "rewrites": [
     {
