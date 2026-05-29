@@ -9,7 +9,6 @@ const ForgotPassword = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetToken, setResetToken] = useState('');
-  const [codeVerified, setCodeVerified] = useState(false);
   const [step, setStep] = useState('email'); // 'email' | 'code' | 'success'
 
   const handleRequestCode = async event => {
@@ -60,7 +59,6 @@ const ForgotPassword = () => {
         code 
       });
       setMessage(response.data.message);
-      setCodeVerified(true);
       setStep('success');
     } catch (err) {
       setError(err.response?.data?.message || 'Codigo incorrecto o expirado.');
@@ -73,7 +71,6 @@ const ForgotPassword = () => {
     setEmail('');
     setCode('');
     setResetToken('');
-    setCodeVerified(false);
     setStep('email');
     setMessage('');
     setError('');

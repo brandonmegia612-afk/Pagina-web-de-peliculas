@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 const { Sequelize, DataTypes, Op } = require('sequelize');
 
 const app = express();
@@ -358,6 +359,39 @@ const normalizeEmbedUrl = url => {
 const normalizeEmail = email => String(email || '').trim().toLowerCase();
 
 const isValidEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+
+const smtpTransporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || '',
+  port: Number(process.env.SMTP_PORT || 587),
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: process.env.SMTP_USER && process.env.SMTP_PASS ? {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  } : undefined,
+});
+
+const canSendEmail = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+
+const sendEmail = async ({ to, subject, text, html }) => {
+  if (!canSendEmail) {
+    console.warn('SMTP no configurado; el correo no se enviara realmente.');
+    return false;
+  }
+
+  try {
+    await smtpTransporter.sendMail({
+      from: process.env.SMTP_FROM || 'no-reply@example.com',
+      to,
+      subject,
+      text,
+      html,
+    });
+    return true;
+  } catch (error) {
+    console.error('Error enviando email de verificación:', error);
+    return false;
+  }
+};
 
 const isAdult = dateOfBirth => {
   if (!dateOfBirth) return false;
@@ -885,19 +919,29 @@ app.post('/api/forgot-password', async (req, res) => {
     expiresAt: Date.now() + 15 * 60 * 1000,
   });
 
-  // En producción, aquí enviarías el email real
-  // Por ahora, retornamos el código para desarrollo
-  console.log(`📧 Código de verificación para ${normalizedEmail}: ${verificationCode}`);
+  const emailSubject = 'Tu código de verificación para restaurar contraseña';
+  const emailText = `Tu código de verificación es: ${verificationCode}\n\nUsa este código en el formulario de restauración de contraseña. Es válido por 15 minutos.`;
+  const emailHtml = `<p>Tu código de verificación es: <strong>${verificationCode}</strong></p><p>Usa este código en el formulario de restauración de contraseña. Es válido por 15 minutos.</p>`;
+
+  const emailSent = await sendEmail({
+    to: normalizedEmail,
+    subject: emailSubject,
+    text: emailText,
+    html: emailHtml,
+  });
+
+  console.log(`📧 Código de verificación para ${normalizedEmail}: ${verificationCode} (email enviado: ${emailSent})`);
 
   await Email.create({
-    subject: 'Tu código de verificación - 15 minutos',
+    subject: emailSubject,
     sender: user.email,
   });
 
   return res.json({
-    message: 'Se envio un codigo de verificacion a tu correo electronico.',
+    message: emailSent
+      ? 'Se envio un codigo de verificacion a tu correo electronico.'
+      : 'Se genero un codigo de verificacion. No se pudo enviar el email porque SMTP no esta configurado. Revisa la consola o configura SMTP.',
     resetToken,
-    // En desarrollo: mostrar código (remover en producción)
     verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined,
   });
 });
