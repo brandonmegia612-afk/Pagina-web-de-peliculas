@@ -293,8 +293,10 @@ Comment.belongsTo(ContentItem);
 ContentItem.hasMany(SeriesEpisode, { onDelete: 'CASCADE' });
 SeriesEpisode.belongsTo(ContentItem);
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@example.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me-password';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'brandonmegia612@gmail.com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '336796uy';
+const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL || 'testuser@example.com';
+const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'Password123!';
 const sessions = new Map();
 
 const publicUser = user => ({
@@ -1158,11 +1160,39 @@ app.delete('/api/comments/:id', authRequired, async (req, res) => {
   res.sendStatus(204);
 });
 
+const seedTestUser = async () => {
+  const email = normalizeEmail(TEST_USER_EMAIL);
+  const hash = bcrypt.hashSync(TEST_USER_PASSWORD, 10);
+  const existingUser = await User.findOne({ where: { email } });
+
+  if (!existingUser) {
+    await User.create({
+      name: 'Usuario Prueba',
+      email,
+      password: hash,
+      phone: '0000000000',
+      dateOfBirth: '1990-01-01',
+      country: 'MX',
+      role: 'user',
+      verified: true,
+    });
+    console.log(`Test user created: ${email} / ${TEST_USER_PASSWORD}`);
+    return;
+  }
+
+  await User.update(
+    { name: existingUser.name || 'Usuario Prueba', password: hash, role: 'user', verified: true },
+    { where: { email } }
+  );
+  console.log(`Test user updated: ${email} / ${TEST_USER_PASSWORD}`);
+};
+
 const init = async () => {
   try {
     await sequelize.authenticate();
     await sequelize.sync({ alter: true });
     await seedAdminUser();
+    await seedTestUser();
 
     const port = process.env.PORT || 3001;
     app.listen(port, () => {

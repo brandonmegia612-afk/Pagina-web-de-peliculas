@@ -73,6 +73,7 @@ const Register = () => {
   };
 
   return (
+    
     <div className="mx-auto mt-10 max-w-md rounded-[2rem] border border-red-700/60 bg-black/90 p-8 text-white shadow-2xl shadow-black/70">
       <h1 className="text-center text-4xl font-black uppercase tracking-[0.25em] text-red-300">Registrarse</h1>
       <p className="mt-4 text-center text-gray-300">Crea tu cuenta y accede a tu perfil personalizado.</p>
@@ -97,7 +98,7 @@ const Register = () => {
         </div>
 
         <div>
-          <label className="block text-sm uppercase tracking-[0.2em] text-red-200">Contrasena</label>
+          <label className="block text-sm uppercase tracking-[0.2em] text-red-200">Contraseña</label>
           <div className="mt-3 flex rounded-3xl border border-gray-700 bg-gray-900 focus-within:border-red-500">
             <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="********" className="w-full rounded-l-3xl bg-transparent px-4 py-3 text-lg text-white focus:outline-none" />
             <button type="button" onClick={() => setShowPassword(current => !current)} className="flex w-14 items-center justify-center rounded-r-3xl text-gray-300 hover:text-white" aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}>
@@ -137,6 +138,7 @@ const Register = () => {
       <p className="mt-6 text-center text-gray-400">
         Ya tienes cuenta? <Link to="/users/login" className="text-red-300 hover:text-white">Inicia sesion</Link>
       </p>
+      <Link to="/users/login" className="text-red-300 hover:text-white">volver</Link>
     </div>
   );
 };

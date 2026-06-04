@@ -26,8 +26,15 @@ services:
       DATABASE_URL: postgres://username:password@db:5432/database
       NODE_ENV: production
       PORT: 3001
-      ADMIN_EMAIL: admin@example.com
-      ADMIN_PASSWORD: cambia-esta-contrasena
+      ADMIN_EMAIL: brandonmegia612@gmail.com
+      ADMIN_PASSWORD: 336796uy
+      # SMTP variables (set these in a .env file or in your host environment)
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_SECURE: ${SMTP_USESSL}
     restart: unless-stopped
 
   frontend:
@@ -41,7 +48,26 @@ services:
       - backend
     environment:
       REACT_APP_API_URL: http://localhost:3001
+      PROXY_TARGET: http://backend:3001
+    restart: unless-stopped
+
+  identity:
+    build: ./backend-csharp
+    ports:
+      - "5001:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - FrontendUrl=http://localhost:3000
+      - Smtp__Host=${SMTP_HOST}
+      - Smtp__Port=${SMTP_PORT}
+      - Smtp__Username=${SMTP_USERNAME}
+      - Smtp__Password=${SMTP_PASSWORD}
+      - Smtp__From=${SMTP_FROM}
+      - Smtp__UseSsl=${SMTP_USESSL}
+    volumes:
+      - identity_data:/app/Data
     restart: unless-stopped
 
 volumes:
   db_data:
+  identity_data:
